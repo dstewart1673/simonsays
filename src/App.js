@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
-import rando from "./rando.js";
+import { rando } from "./rando.js";
+import Game from "./Game.js";
 
 class App extends Component {
   constructor(props) {
@@ -10,7 +10,7 @@ class App extends Component {
       sequence: [],
       strict: false,
       step: 0,
-      colors: ["#xxxxxx", "#yyyyyy", "#zzzzzz", "#vvvvvv"],
+      colors: ["#ff0000", "#0055ff", "#39ff33", "#ffff00"],
       player: false,
       playerStep: 1
     };
@@ -19,11 +19,15 @@ class App extends Component {
     this.handleClick = this.handleClick.bind(this);
     this.allBlink = this.allBlink.bind(this);
     this.gameWin = this.gameWin.bind(this);
+    this.strictToggle = this.strictToggle.bind(this);
+    this.nextBlink = this.nextBlink.bind(this);
   }
 
+  //adds another step to the sequence
   increment() {
     let seq = this.state.sequence;
     seq.push(rando());
+    console.log(seq);
     const st = seq.length;
     this.setState({
       sequence: seq,
@@ -32,38 +36,50 @@ class App extends Component {
     this.blinky();
   }
 
-//add a way to set player to true
+  //toggles the strict feature
+  strictToggle() {
+    this.setState({ strict: (this.state.strict === false ? true : false )});
+  }
+
+  //add a way to set player to true
   blinky() {
-    function next(i) {
-      setTimeout(function() {
-        const box = this.state.sequence[i];
-        const baseColors = this.state.colors[box];
-        let newColors = baseColors;
-        switch (box) {
-          case 0:
-            newColors[0] = "#000000";
-            break;
-          case 1:
-            newColors[1] = "#000000";
-            break;
-          case 2:
-            newColors[2] = "#000000";
-            break;
-          case 3:
-            newColors[3] = "#000000";
-            break;
-          default:
-            break;
-        };
-        this.setState({ colors: newColors });
-        setTimeout(function() {
-          this.setState({ colors: baseColors });
-        }, 1000);
-      }, 2000 * (i+1));
-    }
+    console.log("did it");
     for (let i = 0; i < this.state.step; i++) {
-      next(i);
+      console.log("borp!");
+      this.nextBlink(i);
     };
+  }
+
+  nextBlink(i) {
+    setTimeout(() => {
+      let box = this.state.sequence[i];
+      const baseColors = this.state.colors[box];
+      let newColors = baseColors;
+      switch (box) {
+        case 0:
+          newColors[0] = "#000000";
+          break;
+        case 1:
+          newColors[1] = "#000000";
+          break;
+        case 2:
+          newColors[2] = "#000000";
+          break;
+        case 3:
+          newColors[3] = "#000000";
+          break;
+        default:
+          break;
+      };
+      this.setState({ colors: newColors });
+      setTimeout(() => {
+        this.setState({ colors: baseColors });
+        var stepnum = this.state.step;
+        if (i === stepnum - 1) {
+          this.setState({ player: true });
+        };
+      }, 1000);
+    }, 2000 * (i + 1));
   }
 
   allBlink() {
@@ -129,37 +145,31 @@ class App extends Component {
     });
     function roundBlink(i) {
       setTimeout(function() {
-        this.setState({ colors: ["#000000", "#yyyyyy", "#zzzzzz", "#vvvvvv"]});
+        this.setState({ colors: ["#000000", "#0055ff", "#39ff33", "#ffff00"]});
         setTimeout(function() {
-          this.setState({ colors: colors: ["#xxxxxx", "#000000", "#zzzzzz", "#vvvvvv" });
+          this.setState({ colors: ["#ff0000", "#000000", "#39ff33", "#ffff00"] });
           setTimeout(function() {
-            this.setState({ colors: colors: ["#xxxxxx", "#yyyyyy", "#000000", "#vvvvvv" });
+            this.setState({ colors: ["#ff0000", "#0055ff", "#000000", "#ffff00"] });
             setTimeout(function() {
-              this.setState({ colors: colors: ["#xxxxxx", "#yyyyyy", "#zzzzzz", "#000000" });
+              this.setState({ colors: ["#ff0000", "#0055ff", "#39ff33", "#000000"] });
               setTimeout(function() {
-                this.setState({ colors: colors: ["#xxxxxx", "#yyyyyy", "#zzzzzz", "#vvvvvv" });
+                this.setState({ colors: ["#ff0000", "#0055ff", "#39ff33", "#ffff00"] });
               }, 499)
             }, 500);
           }, 500);
         }, 500);
       }, 2000 * i);
-
-      for (let x = 0; x < 5; x++) {
-        roundBlink(x);
-      }
     }
+    for (let x = 0; x < 5; x++) {
+      roundBlink(x);
+    };
   }
 
   render() {
     return (
       <div className="App">
-        <div className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h2>Welcome to React</h2>
-        </div>
-        <p className="App-intro">
-          To get started, edit <code>src/App.js</code> and save to reload.
-        </p>
+        <h1>WORKS!</h1>
+        <Game start={this.increment} changeStrict={this.strictToggle} clickButton={this.handleClick} strict={this.state.strict} color={this.state.colors} step={this.state.step} />
       </div>
     );
   }
