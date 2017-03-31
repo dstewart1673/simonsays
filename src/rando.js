@@ -1,4 +1,4 @@
-function rando() {
+export function rando() {
   const val = Math.random();
 
   if (val < .25) {
@@ -11,5 +11,3 @@ function rando() {
     return 3;
   }
 }
-
-export { rando };
