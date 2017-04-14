@@ -9,12 +9,12 @@ class App extends Component {
     this.state = {
       sequence: [],
       strict: false,
-      step: 0,
       colors: ["#ff0000", "#0055ff", "#39ff33", "#ffff00"],
       player: false,
-      playerStep: 1
+      playerStep: 0
     };
     this.increment = this.increment.bind(this);
+    this.start = this.start.bind(this);
     this.blinky = this.blinky.bind(this);
     this.handleClick = this.handleClick.bind(this);
     this.allBlink = this.allBlink.bind(this);
@@ -27,13 +27,30 @@ class App extends Component {
   increment() {
     let seq = this.state.sequence;
     seq.push(rando());
-    console.log(seq);
     const st = seq.length;
     this.setState({
       sequence: seq,
-      step: st
     });
-    this.blinky();
+    this.blinky(st, seq);
+  }
+
+//Starts game
+  start() {
+    const seq = this.state.sequence;
+    if (seq.length === 0) {
+      this.increment();
+    } else {
+      this.setState({
+        sequence: [],
+        strict: false,
+        colors: ["#ff0000", "#0055ff", "#39ff33", "#ffff00"],
+        player: false,
+        playerStep: 0
+      });
+      setTimeout(() => {
+        this.increment();
+      }, 500);
+    };
   }
 
   //toggles the strict feature
@@ -41,75 +58,78 @@ class App extends Component {
     this.setState({ strict: (this.state.strict === false ? true : false )});
   }
 
-  //add a way to set player to true
-  blinky() {
-    console.log("did it");
-    for (let i = 0; i < this.state.step; i++) {
-      console.log("borp!");
-      this.nextBlink(i);
+//Iterates through the sequence, passing the current button to nextBlink
+  blinky(step, sequence) {
+    for (let i = 0; i < step; i++) {
+      this.nextBlink(sequence[i], i);
     };
+    this.setState({ player: true });
   }
 
-  nextBlink(i) {
+//Blinks the button it is passed
+  nextBlink(seq, i) {
+    const baseColors = ["#ff0000", "#0055ff", "#39ff33", "#ffff00"];
     setTimeout(() => {
-      let box = this.state.sequence[i];
-      const baseColors = this.state.colors[box];
-      let newColors = baseColors;
-      switch (box) {
+      let newColors = baseColors.slice(0);
+      switch (seq) {
         case 0:
           newColors[0] = "#000000";
+          const sound0 = new Audio('https://s3.amazonaws.com/freecodecamp/simonSound1.mp3');
+          sound0.play();
           break;
         case 1:
           newColors[1] = "#000000";
+          const sound1 = new Audio('https://s3.amazonaws.com/freecodecamp/simonSound2.mp3');
+          sound1.play();
           break;
         case 2:
           newColors[2] = "#000000";
+          const sound2 = new Audio('https://s3.amazonaws.com/freecodecamp/simonSound3.mp3');
+          sound2.play();
           break;
         case 3:
           newColors[3] = "#000000";
+          const sound3 = new Audio('https://s3.amazonaws.com/freecodecamp/simonSound4.mp3');
+          sound3.play();
           break;
         default:
           break;
       };
-      this.setState({ colors: newColors });
-      setTimeout(() => {
-        this.setState({ colors: baseColors });
-        var stepnum = this.state.step;
-        if (i === stepnum - 1) {
-          this.setState({ player: true });
-        };
-      }, 1000);
-    }, 2000 * (i + 1));
+      this.setState({ colors: newColors }, () => {
+        setTimeout(() => {
+          const seql = this.state.sequence;
+          this.setState({ colors: baseColors, player: (i === seql.length - 1 ? true : false) });
+        }, 750)
+      });
+    }, 1000 * (i + 1));
   }
 
+//Blinks all buttons at once if user is incorrect
   allBlink() {
-    function blink(i) {
-      setTimeout(function() {
+    for (let x = 1; x < 4; x++) {
+      setTimeout(() => {
         const originColors = this.state.colors;
         this.setState({ colors: ["#000000", "#000000", "#000000", "#000000"]});
-        setTimeout(function() {
+        setTimeout(() => {
           this.setState({ colors: originColors });
         }, 500)
-      }, 1000 * i);
-    }
-
-    for (let x = 1; x < 4; x++) {
-      blink(x);
+      }, 1000 * x);
     };
   }
 
+//Checks to see if user input is correct
   handleClick(val) {
-    const gameStep = this.state.step;
+    const gameStep = this.state.sequence.length;
     let playerStep = this.state.playerStep;
     if (this.state.player && playerStep <= gameStep) {
       if (val === this.state.sequence[playerStep]) {
-        if (playerStep < gameStep) {
+        if (playerStep < gameStep - 1) {
           playerStep++;
           this.setState({ playerStep: playerStep });
         } else {
           if (gameStep < 20) {
             this.setState({
-              playerStep: 1,
+              playerStep: 0,
               player: false
             });
             this.increment();
@@ -123,53 +143,50 @@ class App extends Component {
             sequence: [],
             step: 0,
             player: false,
-            playerStep: 1
+            playerStep: 0
           });
           this.allBlink();
         } else {
-          this.setState({ player: false });
+          this.setState({ playerStep: 0, player: false });
           this.allBlink();
           //may need to put this in a setTimeout or promise to avoid overlap
-          this.blinky();
+          this.blinky(this.state.sequence.length, this.state.sequence);
         }
       }
     }
   }
 
+//Called if user wins game, resets and shows circle of blinking buttons
   gameWin() {
     this.setState({
       sequence: [],
       step: 0,
       player: false,
-      playerStep: 1
+      playerStep: 0
     });
-    function roundBlink(i) {
-      setTimeout(function() {
+    for (let x = 0; x < 5; x++) {
+      setTimeout(() => {
         this.setState({ colors: ["#000000", "#0055ff", "#39ff33", "#ffff00"]});
-        setTimeout(function() {
+        setTimeout(() => {
           this.setState({ colors: ["#ff0000", "#000000", "#39ff33", "#ffff00"] });
-          setTimeout(function() {
+          setTimeout(() => {
             this.setState({ colors: ["#ff0000", "#0055ff", "#000000", "#ffff00"] });
-            setTimeout(function() {
+            setTimeout(() => {
               this.setState({ colors: ["#ff0000", "#0055ff", "#39ff33", "#000000"] });
-              setTimeout(function() {
+              setTimeout(() => {
                 this.setState({ colors: ["#ff0000", "#0055ff", "#39ff33", "#ffff00"] });
               }, 499)
             }, 500);
           }, 500);
         }, 500);
-      }, 2000 * i);
-    }
-    for (let x = 0; x < 5; x++) {
-      roundBlink(x);
+      }, 2000 * x);
     };
   }
 
   render() {
     return (
       <div className="App">
-        <h1>WORKS!</h1>
-        <Game start={this.increment} changeStrict={this.strictToggle} clickButton={this.handleClick} strict={this.state.strict} color={this.state.colors} step={this.state.step} />
+        <Game start={this.start} changeStrict={this.strictToggle} clickButton={this.handleClick} strict={this.state.strict} color={this.state.colors} step={this.state.sequence.length} />
       </div>
     );
   }
